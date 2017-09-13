@@ -9,8 +9,11 @@
   "author": "Eric Julius",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.16.2",
+    "dotenv": "^4.0.0",
+    "form-data": "^2.3.1",
     "moment": "^2.18.1",
-    "raspicam": "^0.2.14",
-    "request": "^2.81.0"
+    "pi-camera": "^1.0.1",
+    "raspicam": "^0.2.14"
   }
 }

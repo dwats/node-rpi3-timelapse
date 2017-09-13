@@ -1,40 +1,86 @@
-const RaspiCam = require('raspicam');
-const request = require('request');
-const path = require('path');
+require('dotenv').config();
+const PiCamera = require('pi-camera');
+const FormData = require('form-data');
 const moment = require('moment');
+const axios = require('axios');
+const path = require('path');
+const { URL } = require('url');
 const fs = require('fs');
 
-const mode = 'photo' // or timelapse
-const output = {
-  photo: path.join(__dirname, 'photos', `${moment().format('HH_mm_ss_DD_MM_YYYY')}.png`),
-  timelapse: path.join(__dirname, 'timelapse', moment().format('HH_mm_ss_DD_MM_YYYY'), `timelapse_%d.png`)
-}
-
-const camera = new RaspiCam({
+let TOKEN;
+// const API_URL = 'http://ec2-52-87-212-190.compute-1.amazonaws.com';
+const API_URL = 'http://192.168.1.100:3000';
+const mode = 'photo';
+const output = path.join(__dirname, 'tmp/tmp.png');
+const camera = new PiCamera({
   mode,
-  output: output[mode],
+  output,
   encoding: 'png',
-  width: 3280,
-  height: 2464,
-  thumb: '100:100:8',
-  rotation: 180
+  width: 1024,
+  height: 768
 });
 
-camera.start();
-camera.on('start', () => {
-  console.log('camera started');
-});
 
-camera.on('read', (err, timestamp, filename) => {
-  if (err) return console.log('Error on read', err);
+const sendPicture = () => {
+  const form = new FormData();
+  const api = new URL(API_URL);
+  form.append('file', fs.createReadStream(path.join(output)), {
+    filepath: output,
+    contentType: 'image/png'
+  });
+  const config = {
+    host: api.hostname,
+    port: api.port,
+    path: '/images',
+    headers: { 'x-auth': TOKEN }
+  }
 
-  const image = fs.readFileSync(output[mode]);
-  const base64image = image.toString('base64');
-  fs.writeFileSync(`photos/${filename}.txt`, base64image);
-  console.log(`${filename}.txt ready`);
-  camera.stop();
-});
+  return new Promise((resolve, reject) => {
+    form.submit(config, (err, res) => {
+      if (err) resolve(`${res.statusCode} @ ${new Date()}`);
+      if (!res) reject(`${res.statusCode}`);
+      resolve(`${res.statusCode} @ ${new Date()}`);
+    });
+  });
+};
 
-camera.on('stop', () => {
-  console.log('camera stopped');
-})
+const doTimelapse = (interval) => {
+  takePicture()
+    .then(() => sendPicture())
+    .then((res) => {
+      prunePictures()
+      return res;
+    })
+    .then((res) => {
+      console.log(res);
+      setTimeout(doTimelapse, interval);
+    })
+    .catch((e) => {
+      console.log(e, '\n\nError Encountered', new Date())
+      logout();
+    });
+};
+
+const login = () => {
+  return axios.post(`${API_URL}/users/login`, {
+    username: process.env.UNAME,
+    password: process.env.PASSWORD
+  })
+  .then((res) => {
+    TOKEN = res.headers['x-auth'];
+    return res;
+  })
+  .catch((e) => console.log(e));
+};
+
+const logout = () => axios.delete(`${API_URL}/users/me/token`, { headers: { 'x-auth': TOKEN }});
+const prunePictures = () => axios.delete(`${API_URL}/images`, { headers: { 'x-auth': TOKEN }});
+const takePicture = () => camera.snap();
+
+login()
+  .then(() => doTimelapse(60000))
+  .catch((e) => {
+    console.log(e);
+    logout();
+  });
+
