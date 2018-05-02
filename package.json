@@ -9,11 +9,18 @@
   "author": "Eric Julius",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.16.2",
     "dotenv": "^4.0.0",
     "form-data": "^2.3.1",
-    "moment": "^2.18.1",
+    "node-cron": "^1.2.1",
     "pi-camera": "^1.0.1",
-    "raspicam": "^0.2.14"
+    "videoshow": "^0.1.11"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-standard": "^3.1.0"
   }
 }
