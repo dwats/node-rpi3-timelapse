@@ -1,5 +1,5 @@
 function log () { 
-  console.log(`[${new Date()}] ${[...arguments].join(' ')}`)
+  console.log(`${[...arguments].join(' ')}`)
 }
 
 module.exports = log

@@ -28,8 +28,9 @@ function getImage () {
     nopreview: true
   })
 
-  log('grabbing image...')
   return camera.snap()
+    .then((res) => { log(`image captured`) })
+    .catch(log)
 }
 
 const pruneOldestImage = () => {
