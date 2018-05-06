@@ -13,7 +13,9 @@ const imageDir = path.join(__dirname, '../media/images')
 async function handleImage () {
   getImage()
     .then(pruneOldestImage)
-    .then(renameImages)
+    .then(shouldRename => {
+      if (shouldRename) renameImages
+    })
     // .then(sendLatestImage)
     .catch(log)
 }
@@ -40,7 +42,9 @@ const pruneOldestImage = () => {
         toDelete = path.join(imageDir, files.shift())
         log(`deleting ${toDelete}`)
         fs.unlinkSync(toDelete)
+        return true
       }
+      return false
     })
     .catch(log)
 }
@@ -48,17 +52,12 @@ const pruneOldestImage = () => {
 function renameImages () {
   return fs.readdir(imageDir)
     .then(files => {
-      /**
-       * @todo create standalone reverse `forEach`
-       */
       const filesLen = files.length - 1
-      for (let index = filesLen; index >= 0; index--) {
-        const file = files[index]
-        fs.renameSync(
-          path.join(imageDir, file),
-          path.join(imageDir, `frame_${pad(index + 1, 4)}.png`)
-        )
-      }
+      files.forEach((file, index) => {
+        const oldName = path.join(imageDir, file)
+        const newName = path.join(imageDir, `frame_${pad(index + 1, 4)}.png`)
+        fs.renameSync(oldName, newName)
+      })
     })
     .catch(log)
 }
