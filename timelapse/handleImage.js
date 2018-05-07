@@ -15,7 +15,7 @@ async function handleImage () {
   getImage()
     .then(pruneOldestImage)
     .then(shouldRename => {
-      if (shouldRename) renameImages
+      if (shouldRename) renameImages()
     })
     // .then(sendLatestImage)
     .catch(log)
@@ -55,6 +55,7 @@ const pruneOldestImage = () => {
 function renameImages () {
   return fs.readdir(imageDir)
     .then(files => {
+      log('renaming...')
       const filesLen = files.length - 1
       files.forEach((file, index) => {
         const oldName = path.join(imageDir, file)
