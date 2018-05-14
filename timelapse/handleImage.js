@@ -1,5 +1,5 @@
 const PiCamera = require('pi-camera')
-const { S3 } = require('aws-sdk')
+const AWS = require('aws-sdk')
 const fs = require('fs-extra')
 const path = require('path')
 
@@ -65,8 +65,8 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
-  const s3 = new S3()
-
+  const s3 = new AWS.S3()
+  log(AWS.config.credentials.constructor)
   const files = await fs.readdir(imageDir).catch(log)
   const latestFile = path.join(imageDir, files.pop())
   const fileData = await fs.readFile(latestFile).catch(log)
