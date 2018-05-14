@@ -65,7 +65,7 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
-  const s3 = S3()
+  const s3 = new S3()
 
   const files = await fs.readdir(imageDir).catch(log)
   const latestFile = path.join(__dirname, imageDir, files.pop())
