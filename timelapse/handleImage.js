@@ -10,7 +10,7 @@ const maxFrameCount = Number(process.env.MAX_FRAME_COUNT)
 const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
 
-async function handleImage () {
+function handleImage () {
   getImage()
     .then(pruneOldestImage)
     .then(shouldRename => {
