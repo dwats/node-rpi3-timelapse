@@ -68,7 +68,7 @@ async function sendLatestImage () {
   const s3 = new S3()
 
   const files = await fs.readdir(imageDir).catch(log)
-  const latestFile = path.join(__dirname, imageDir, files.pop())
+  const latestFile = path.join(imageDir, files.pop())
   const fileData = await fs.readFile(latestFile).catch(log)
 
   const params = {
