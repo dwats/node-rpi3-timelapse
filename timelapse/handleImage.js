@@ -14,7 +14,7 @@ async function handleImage () {
   getImage()
     .then(pruneOldestImage)
     .then(shouldRename => {
-      if (shouldRename) renameImages()
+      if (shouldRename) return renameImages()
     })
     .then(sendLatestImage)
     .catch(log)
@@ -41,7 +41,7 @@ function getImage () {
 const pruneOldestImage = () => {
   return fs.readdir(imageDir)
     .then(files => {
-      if (files.length > maxFrameCount) {
+      if (files.length >= maxFrameCount) {
         const toDelete = path.join(imageDir, files.shift())
         log(`deleting ${toDelete}`)
         fs.unlinkSync(toDelete)
