@@ -1,14 +1,13 @@
 const PiCamera = require('pi-camera')
 const { S3 } = require('aws-sdk')
 const fs = require('fs-extra')
-const { URL } = require('url')
 const path = require('path')
 
 const log = require('../utils/log')
 const pad = require('../utils/pad')
 
 const maxFrameCount = Number(process.env.MAX_FRAME_COUNT)
-const apiUrl = new URL(process.env.API_URL)
+const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
 
 async function handleImage () {
@@ -17,32 +16,33 @@ async function handleImage () {
     .then(shouldRename => {
       if (shouldRename) renameImages()
     })
-    // .then(sendLatestImage)
+    .then(sendLatestImage)
     .catch(log)
 }
 
 function getImage () {
   return fs.readdir(imageDir)
     .then(files => {
+      const filepath = path.join(imageDir, `frame_${pad(files.length + 1, 4)}.png`)
       const camera = new PiCamera({
         mode: 'photo',
-        output: path.join(imageDir, `frame_${pad(files.length + 1, 4)}.png`),
+        output: filepath,
         encoding: 'png',
         width: 1280,
         height: 720,
         nopreview: true
       })
+      camera.snap()
 
-      return camera.snap()
     })
-    .then(res => log(`image captured`))
+    .then(res => log('image captured'))
     .catch(log)
 }
 
 const pruneOldestImage = () => {
   return fs.readdir(imageDir)
     .then(files => {
-      if (files.length > 390) {
+      if (files.length > maxFrameCount) {
         const toDelete = path.join(imageDir, files.shift())
         log(`deleting ${toDelete}`)
         fs.unlinkSync(toDelete)
@@ -64,11 +64,15 @@ function renameImages () {
     .catch(log)
 }
 
-function sendLatestImage () {
+async function sendLatestImage () {
   const s3 = S3()
 
+  const files = await fs.readdir(imageDir).catch(log)
+  const latestFile = path.join(__dirname, imageDir, files.pop())
+  const fileData = await fs.readFile(latestFile).catch(log)
+
   const params = {
-    Body: <Binary String>,
+    Body: Buffer.from(fileData, 'binary'),
     Bucket: bucketName,
     Key: 'timelapse.png'
   }
