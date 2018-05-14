@@ -33,7 +33,6 @@ function getImage () {
         nopreview: true
       })
       camera.snap()
-
     })
     .then(res => log('image captured'))
     .catch(log)
@@ -55,12 +54,13 @@ const pruneOldestImage = () => {
 function renameImages () {
   return fs.readdir(imageDir)
     .then(files => {
-      files.forEach((file, index) => {
+      return files.forEach((file, index) => {
         const oldName = path.join(imageDir, file)
         const newName = path.join(imageDir, `frame_${pad(index + 1, 4)}.png`)
         fs.renameSync(oldName, newName)
       })
     })
+    .then(() => log('renaming complete'))
     .catch(log)
 }
 
