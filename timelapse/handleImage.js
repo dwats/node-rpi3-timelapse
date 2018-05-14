@@ -11,6 +11,12 @@ const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
 
 async function handleImage () {
+
+  const { spawnSync } = require('child_process')
+  const whoami = spawnSync('whoami')
+  log(`stdout: ${whoami.stdout}`)
+  log(`stderr: ${whoami.stderr}`)
+
   getImage()
     .then(pruneOldestImage)
     .then(shouldRename => {
@@ -65,8 +71,6 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
-  const credentials = new aws.SharedIniFileCredentials({ profile: 'default' })
-  aws.config.credentials = credentials
   const s3 = new aws.S3()
 
   const files = await fs.readdir(imageDir).catch(log)
