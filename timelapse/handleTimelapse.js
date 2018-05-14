@@ -44,7 +44,7 @@ async function sendTimelapse () {
   const params = {
     Body: Buffer.from(fileData, 'binary'),
     Bucket: bucketName,
-    Key: 'timelapse.png'
+    Key: 'timelapse.mp4'
   }
 
   return s3.putObject(params).promise()
