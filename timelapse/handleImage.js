@@ -6,6 +6,7 @@ const path = require('path')
 const log = require('../utils/log')
 const pad = require('../utils/pad')
 
+const s3 = new aws.S3()
 const maxFrameCount = Number(process.env.MAX_FRAME_COUNT)
 const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
@@ -65,10 +66,6 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
-  const s3 = new aws.S3()
-
-  log(aws.config.credentials)
-
   const files = await fs.readdir(imageDir).catch(log)
   const latestFile = path.join(imageDir, files.pop())
   const fileData = await fs.readFile(latestFile).catch(log)
