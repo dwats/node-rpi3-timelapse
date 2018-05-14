@@ -1,5 +1,5 @@
 const PiCamera = require('pi-camera')
-const FormData = require('form-data')
+const { S3 } = require('aws-sdk')
 const fs = require('fs-extra')
 const { URL } = require('url')
 const path = require('path')
@@ -39,7 +39,7 @@ const pruneOldestImage = () => {
   return fs.readdir(imageDir)
     .then(files => {
       if (files.length > 390) {
-        toDelete = path.join(imageDir, files.shift())
+        const toDelete = path.join(imageDir, files.shift())
         log(`deleting ${toDelete}`)
         fs.unlinkSync(toDelete)
         return true
@@ -52,7 +52,6 @@ const pruneOldestImage = () => {
 function renameImages () {
   return fs.readdir(imageDir)
     .then(files => {
-      const filesLen = files.length - 1
       files.forEach((file, index) => {
         const oldName = path.join(imageDir, file)
         const newName = path.join(imageDir, `frame_${pad(index + 1, 4)}.png`)
@@ -63,24 +62,15 @@ function renameImages () {
 }
 
 function sendLatestImage () {
-  return new Promise((resolve, reject) => {
-    const form = new FormData()
+  const s3 = S3()
 
-    form.append('file', fs.createReadStream(path.join(imageDir, 'frame_0001.png')), {
-      filepath: output,
-      contentType: 'image/png'
-    })
-    const config = {
-      host: apiUrl.hostname,
-      path: '/image'
-    }
+  const params = {
+    Body: <Binary String>,
+    Bucket: bucketName,
+    Key: 'timelapse.png'
+  }
 
-    form.submit(config, (err, res) => {
-      if (err) return resolve(err, `\nerr @ ${new Date()}`)
-      if (!res) return reject(Error('No response.'))
-      return resolve(`submit ok @ ${new Date()}`)
-    })
-  })
+  return s3.putObject(params).promise()
 }
 
 module.exports = handleImage
