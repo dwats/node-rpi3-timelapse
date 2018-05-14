@@ -11,12 +11,6 @@ const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
 
 async function handleImage () {
-
-  const { spawnSync } = require('child_process')
-  const whoami = spawnSync('whoami')
-  log(`stdout: ${whoami.stdout}`)
-  log(`stderr: ${whoami.stderr}`)
-
   getImage()
     .then(pruneOldestImage)
     .then(shouldRename => {
