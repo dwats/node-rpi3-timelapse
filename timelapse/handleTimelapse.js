@@ -1,54 +1,52 @@
 const ffmpeg = require('fluent-ffmpeg')
-const FormData = require('form-data')
-const { URL } = require('url')
+const aws = require('aws-sdk')
 const path = require('path')
 const fs = require('fs')
 
 const log = require('../utils/log')
 
+const bucketName = process.env.BUCKET_NAME
 const input = path.join(__dirname, '../media/images/frame_%04d.png')
 const output = path.join(__dirname, '../media/video/timelapse.mp4')
 
-async function handleTimelapse () {
+function handleTimelapse () {
   getTimelapse()
-    // .then(sendTimelapse)
-    // .catch(log)
+    .then(sendTimelapse)
+    .catch(log)
 }
 
 function getTimelapse () {
-  ffmpeg()
-    .addInput(input)
-    .videoCodec('libx264')
-    .fps(30)
-    .size('1280x720')
-    .output(output)
-    .on('start', cli => log('ffmpeg starting...'))
-    .on('end', () => log('ffmpeg finished'))
-    .on('error', err => {
-      if (err) log('ffmpeg error\n', err.message)
-    })
-    .run()
+  return new Promise((resolve, reject) => {
+    ffmpeg()
+      .addInput(input)
+      .videoCodec('libx264')
+      .fps(30)
+      .size('1280x720')
+      .output(output)
+      .on('start', cli => log('ffmpeg starting...'))
+      .on('end', () => {
+        log('ffmpeg finished')
+        resolve()
+      })
+      .on('error', err => {
+        if (err) reject(Error(err))
+      })
+      .run()
+  })
 }
 
-function sendTimelapse () {
-  return new Promise((resolve, reject) => {
-    const form = new FormData()
+async function sendTimelapse () {
+  const s3 = new aws.S3()
 
-    form.append('file', fs.createReadStream(output), {
-      filepath: output,
-      contentType: 'image/png'
-    })
-    const config = {
-      host: apiUrl.hostname,
-      path: '/video'
-    }
+  const fileData = await fs.readFile(output).catch(log)
 
-    form.submit(config, (err, res) => {
-      if (err) return resolve(err, `\nerr @ ${new Date()}`)
-      if (!res) return reject(Error('No response.'))
-      return resolve(`submit ok @ ${new Date()}`)
-    })
-  })
+  const params = {
+    Body: Buffer.from(fileData, 'binary'),
+    Bucket: bucketName,
+    Key: 'timelapse.png'
+  }
+
+  return s3.putObject(params).promise()
 }
 
 module.exports = handleTimelapse
