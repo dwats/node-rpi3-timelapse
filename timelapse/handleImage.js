@@ -66,6 +66,8 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
+  log(aws.config)
+
   const files = await fs.readdir(imageDir).catch(log)
   const latestFile = path.join(imageDir, files.pop())
   const fileData = await fs.readFile(latestFile).catch(log)
