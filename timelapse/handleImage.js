@@ -6,7 +6,6 @@ const path = require('path')
 const log = require('../utils/log')
 const pad = require('../utils/pad')
 
-const s3 = new aws.S3()
 const maxFrameCount = Number(process.env.MAX_FRAME_COUNT)
 const bucketName = process.env.BUCKET_NAME
 const imageDir = path.join(__dirname, '../media/images')
@@ -66,7 +65,9 @@ function renameImages () {
 }
 
 async function sendLatestImage () {
-  log('creds', JSON.stringify(aws.config.credentials, null, 2))
+  const credentials = new aws.SharedIniFileCredentials({ profile: 'default' })
+  aws.config.credentials = credentials
+  const s3 = aws.S3()
 
   const files = await fs.readdir(imageDir).catch(log)
   const latestFile = path.join(imageDir, files.pop())
