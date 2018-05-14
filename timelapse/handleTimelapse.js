@@ -1,7 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg')
 const aws = require('aws-sdk')
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs-extra')
 
 const log = require('../utils/log')
 
@@ -12,6 +12,7 @@ const output = path.join(__dirname, '../media/video/timelapse.mp4')
 function handleTimelapse () {
   getTimelapse()
     .then(sendTimelapse)
+    .then(log)
     .catch(log)
 }
 
