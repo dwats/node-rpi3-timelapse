@@ -23,6 +23,7 @@ function getTimelapse () {
       .videoCodec('libx264')
       .fps(30)
       .size('1280x720')
+      .outputOptions('-pix_fmt yuv420p')
       .output(output)
       .on('start', cli => log('ffmpeg starting...'))
       .on('end', () => {
